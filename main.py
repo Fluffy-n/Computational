@@ -1,20 +1,40 @@
 import numpy as np
-A = np.array([[-1, 0.52, 0.08, 0.13],
-              [0.07, -1.38, -0.05, 0.41],
-              [0.04, 0.42, -0.89, -0.07],
-              [0.17, 0.18, -0.13, -0.81]])
-b = np.array([0.22, -1.8, 1.3, -0.33])
-def jacobi(A, b, eps=0.0001, max=100):
-    x = np.zeros_like(b, dtype=np.double)
-    T = A - np.diag(np.diagonal(A))
-    steps = 0
-    for k in range(max):
-        x_old = x.copy()
-        x[:] = (b - np.dot(T, x)) / np.diagonal(A)
-        if np.linalg.norm(x - x_old, ord=np.inf) / np.linalg.norm(x, ord=np.inf) < eps:
-            break
-        steps += 1
-    print(f"Number of iterations: {steps}")
-    return x
-x = jacobi(A, b)
-print("Solution:", np.around(x, decimals=4))
+y = np.array([0.30452, 1.02652, 2.12928, 3.62686, 6.0502, 11.0765])
+x = np.array([0.3, 0.9, 1.5, 2, 2.5, 3.1])
+# функція для обчислення розділених різниць
+def divided_diff(x, y):
+    # визначення кількості точок
+    n = len(x)
+    # створення матриці розмірності (n, n) з нулями
+    A = np.zeros((n, n))
+    # запис значень y у перший стовпець матриці A
+    A[:,0] = y
+    # заповнення решти стовпців матриці A
+    for j in range(1,n):
+        for i in range(n-j):
+            # обчислення розділеної різниці
+            A[i][j] = (A[i+1][j-1] - A[i][j-1]) / (x[i+j] - x[i])
+    # повернення першого рядка матриці A
+    return A[0,:]
+# функція для обчислення інтерполяційного многочлена Ньютона
+def newton_interpolation(x, y, x_values):
+    # визначення кількості точок
+    n = len(x)
+    # обчислення коефіцієнтів розділених різниць
+    coeffs = divided_diff(x, y)
+    # ініціалізація змінної для збереження значення многочлена
+    p = coeffs[-1]
+    # обчислення многочлена
+    for k in range(2, n+1):
+        p = coeffs[n-k] + (x_values - x[n-k])*p
+    # повернення значення многочлена
+    return p
+# використання функції для побудови многочлена та його використання для обчислення значень
+# задання точок, в яких потрібно обчислити значення многочлена
+x_values = [0.5, 1.7, 2.9]
+p = newton_interpolation(x, y, x_values)
+total = 0
+for value in p:
+    total += value
+print("Значення многочлена:", p)
+print("Загальна сума:", total)
